@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: retailq
+      POSTGRES_PASSWORD: retailq
+      POSTGRES_DB: retailq
+    ports: ['5432:5432']
+    volumes:
+      - retailq_db:/var/lib/postgresql/data
+      - ./db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL','pg_isready -U retailq']
+      interval: 3s
+      retries: 15
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    environment:
+      DATABASE_URL: postgres://retailq:retailq@db:5432/retailq
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a random value with at least 32 characters}
+    ports: ['4000:4000']
+    depends_on:
+      db: {condition: service_healthy}
+volumes:
+  retailq_db:

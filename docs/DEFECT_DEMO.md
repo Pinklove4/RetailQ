@@ -1,0 +1,2 @@
+# Controlled defect exercise (manual, not yet executed)
+Create `demo/checkout-tax-defect` from main. In `api/src/app.ts`, change `const tax=Math.round((subtotal-discount)*taxBps/10000)` to `const tax=Math.round(subtotal*taxBps/10000)`. Run `npm test`: the discount-before-tax assertion should fail. Save failing output, revert the line, rerun, and record actual evidence. Do not claim this defect has been observed until executed.

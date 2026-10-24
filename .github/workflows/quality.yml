@@ -1,0 +1,69 @@
+name: RetailQ Quality Gates
+on: [push, pull_request]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://retailq:retailq@localhost:5432/retailq
+      JWT_SECRET: retailq-ci-only-secret-use-at-least-32-characters
+      RUN_DB_INTEGRATION: '1'
+      TEST_TAX_BPS: '825'
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: retailq
+          POSTGRES_PASSWORD: retailq
+          POSTGRES_DB: retailq
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd 'pg_isready -U retailq' --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Initialize database
+        run: |
+          for migration in db/*.sql; do
+            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$migration"
+          done
+      - run: npm run typecheck
+      - run: npm run lint
+      - name: Run API tests and collect coverage
+        run: mkdir -p artifacts && npm run test:coverage
+      - name: Add coverage summary
+        if: always()
+        run: |
+          if [ -f artifacts/coverage/coverage-summary.json ]; then
+            node --input-type=module -e 'import fs from "node:fs"; const t=JSON.parse(fs.readFileSync("artifacts/coverage/coverage-summary.json","utf8")).total; console.log(`## API coverage\n\n| Lines | Statements | Functions | Branches |\n|---:|---:|---:|---:|\n| ${t.lines.pct}% | ${t.statements.pct}% | ${t.functions.pct}% | ${t.branches.pct}% |`)' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - run: npx playwright install --with-deps chromium firefox
+      - run: npm run test:e2e
+      - name: Ingest API test results into quality dashboard
+        run: |
+          ./node_modules/.bin/tsx api/src/index.ts > /tmp/retailq-api.log 2>&1 &
+          api_pid=$!
+          trap 'kill "$api_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:4000/api/health > /dev/null; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$ready" -ne 1 ]; then
+            cat /tmp/retailq-api.log
+            exit 1
+          fi
+          token=$(node --input-type=module -e 'import jwt from "jsonwebtoken"; process.stdout.write(jwt.sign({id: 1, role: "admin"}, process.env.JWT_SECRET))')
+          RETAILQ_ADMIN_TOKEN="$token" RETAILQ_API_URL=http://127.0.0.1:4000/api npm run quality:ingest -- artifacts/api-results.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: quality-evidence
+          path: artifacts/

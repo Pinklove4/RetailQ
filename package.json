@@ -1,0 +1,26 @@
+{
+  "name": "retailq",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w api\" \"npm run dev -w web\"",
+    "test": "npm run test -w api",
+    "test:e2e": "playwright test",
+    "lint": "eslint api/src api/tests web/src tests scripts playwright.config.ts",
+    "typecheck": "npm run typecheck -w api && npm run typecheck -w web",
+    "build": "npm run build -w web",
+    "test:api": "npm run test -w api",
+    "test:perf": "k6 run tests/performance/load.js",
+    "test:coverage": "npm run test:coverage -w api",
+    "quality:ingest": "node scripts/ingest-test-results.mjs"
+  },
+  "workspaces": [
+    "api",
+    "web"
+  ],
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "concurrently": "^9.2.0",
+    "typescript": "^5.9.3"
+  }
+}
