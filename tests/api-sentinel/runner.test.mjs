@@ -155,6 +155,21 @@ test('rejects HTTP base URLs outside the configured API path', async () => {
   assert.match(result.results[0].error, /escapes/);
 });
 
+test('times out a stalled HTTP request and closes the test server', async () => {
+  const stalled = createServer(() => {});
+  await new Promise((resolve) => stalled.listen(0, '127.0.0.1', resolve));
+  try {
+    const result = await runSuite({
+      tests: [{ name: 'stalled endpoint', path: '/', status: 200, timeoutMs: 25 }],
+    }, { baseUrl: `http://127.0.0.1:${stalled.address().port}` });
+    assert.equal(result.failed, 1);
+    assert.equal(result.results[0].error, 'Request timed out.');
+  } finally {
+    stalled.closeAllConnections();
+    await new Promise((resolve, reject) => stalled.close((error) => error ? reject(error) : resolve()));
+  }
+});
+
 test('RetailQ API Sentinel suite covers the complete customer checkout flow', async () => {
   contractCart = [];
   contractOrder = undefined;

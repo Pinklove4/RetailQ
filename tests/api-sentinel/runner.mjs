@@ -61,7 +61,7 @@ export async function runSuite(suite, { baseUrl, variables = {} } = {}) {
         method,
         headers: { Accept: 'application/json', 'Content-Type': 'application/json', ...request.headers },
         body: request.body === undefined ? undefined : JSON.stringify(request.body),
-        signal: AbortSignal.timeout(request.timeoutMs || 5000),
+        signal: AbortSignal.timeout(request.timeoutMs ?? 5000),
         redirect: 'error',
       });
       httpStatus = response.status;
@@ -94,12 +94,15 @@ export async function runSuite(suite, { baseUrl, variables = {} } = {}) {
       results.push({ name: test.name, status: 'passed', durationMs, httpStatus });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown request failure.';
+      const failure = error instanceof Error && error.name === 'TimeoutError'
+        ? 'Request timed out.'
+        : message.replace(/\bBearer\s+\S+/gi, 'Bearer [REDACTED]');
       results.push({
         name: typeof test?.name === 'string' ? test.name : 'Invalid test',
         status: 'failed',
         durationMs: Math.round(performance.now() - startedAt),
         ...(httpStatus === undefined ? {} : { httpStatus }),
-        error: message.replace(/\bBearer\s+\S+/gi, 'Bearer [REDACTED]'),
+        error: failure,
       });
     }
   }
