@@ -25,6 +25,8 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+      - name: Scan repository for credential patterns
+        run: npm run scan:secrets
       - run: npm ci
       - name: Initialize database
         run: |

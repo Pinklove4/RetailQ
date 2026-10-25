@@ -29,6 +29,7 @@ docker compose exec -T db psql -U retailq -d retailq -f /docker-entrypoint-initd
 New-Item -ItemType Directory -Force artifacts
 npm run typecheck
 npm run lint
+npm run scan:secrets
 npm test
 npm run test:api-contract
 npm run test:coverage
@@ -56,7 +57,7 @@ $env:SENTINEL_IDEMPOTENCY_KEY = "contract-$([guid]::NewGuid().ToString('N'))"
 npm run test:api-contract
 ```
 
-It writes JSON, JUnit XML, and HTML reports under `artifacts/api-contract/`. Playwright starts the API and web server automatically, but requires a running database. Its browser tests use a page-object fixture adapted from the AutoTest Pro pattern and unique synthetic accounts. CI migrates PostgreSQL, runs unit and concurrent integration tests, lint/type checks, browser tests, API contract checks, coverage reporting, and uploads the reports as GitHub Actions artifacts. CI ingests both Vitest and API contract results into the quality dashboard. The supplied CodeVerity runner was not copied because its lint, type-check, dependency-tree, and audit checks overlap the existing project gates; the existing CI keeps those checks attached directly to RetailQ's own configs and lockfile. Generated portfolio/report bundles from the archive were also excluded.
+It writes JSON, JUnit XML, and HTML reports under `artifacts/api-contract/`. Playwright starts the API and web server automatically, but requires a running database. Its browser tests use a page-object fixture adapted from the AutoTest Pro pattern and unique synthetic accounts. CI migrates PostgreSQL, runs unit and concurrent integration tests, lint/type checks, credential-pattern scanning, browser tests, API contract checks, coverage reporting, and uploads the reports as GitHub Actions artifacts. CI ingests both Vitest and API contract results into the quality dashboard. CodeVerity's lint, type-check, dependency-tree, and audit checks overlap RetailQ's existing project gates, so CI continues to run those directly against RetailQ's own configs and lockfile. Its distinct private-key, AWS access-key, and GitHub-token signature scan is integrated as `npm run scan:secrets`; findings include only the file, line, and rule. The scan skips symlinks, files larger than 1 MB, and dependency/generated-report directories. This pattern check is a narrow safeguard, not comprehensive secret detection or a security assessment. Generated portfolio/report bundles from the archive were excluded.
 
 The Playwright matrix covers desktop Chromium, Firefox, WebKit, and Pixel 7 mobile emulation. Failure traces, screenshots, and videos are retained under `artifacts/test-results/`; HTML, JSON, and JUnit reports are written under `artifacts/`. In CI, focused tests are rejected and failed tests are retried once for diagnostics; local runs do not retry.
 

@@ -48,4 +48,14 @@ export default tseslint.config(
       },
     },
   },
+  {
+    files: ['tests/codeverity/**/*.mjs', 'scripts/scan-secrets.mjs'],
+    languageOptions: {
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        URL: 'readonly',
+      },
+    },
+  },
 );
