@@ -34,4 +34,18 @@ export default tseslint.config(
       },
     },
   },
+  {
+    files: ['tests/api-sentinel/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        AbortSignal: 'readonly',
+        Buffer: 'readonly',
+        console: 'readonly',
+        fetch: 'readonly',
+        performance: 'readonly',
+        process: 'readonly',
+        URL: 'readonly',
+      },
+    },
+  },
 );

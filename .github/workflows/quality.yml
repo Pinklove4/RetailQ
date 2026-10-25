@@ -60,8 +60,14 @@ jobs:
             cat /tmp/retailq-api.log
             exit 1
           fi
+          BASE_URL=http://127.0.0.1:4000/api/ \
+          SENTINEL_EMAIL="sentinel-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}@example.test" \
+          SENTINEL_PASSWORD="retailq-sentinel-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+          SENTINEL_IDEMPOTENCY_KEY="sentinel-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            npm run test:api-contract
           token=$(node --input-type=module -e 'import jwt from "jsonwebtoken"; process.stdout.write(jwt.sign({id: 1, role: "admin"}, process.env.JWT_SECRET))')
           RETAILQ_ADMIN_TOKEN="$token" RETAILQ_API_URL=http://127.0.0.1:4000/api npm run quality:ingest -- artifacts/api-results.json
+          RETAILQ_ADMIN_TOKEN="$token" RETAILQ_API_URL=http://127.0.0.1:4000/api npm run quality:ingest -- artifacts/api-contract/results.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:

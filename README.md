@@ -30,6 +30,7 @@ New-Item -ItemType Directory -Force artifacts
 npm run typecheck
 npm run lint
 npm test
+npm run test:api-contract
 npm run test:coverage
 npx playwright install chromium firefox
 npm run test:e2e
@@ -45,7 +46,17 @@ $env:RUN_DB_INTEGRATION = '1'
 npm run test:coverage
 ```
 
-Playwright starts the API and web server automatically, but requires a running database. CI migrates PostgreSQL, runs unit and concurrent integration tests, lint/type checks, browser tests, coverage reporting, and uploads the reports as GitHub Actions artifacts. CI also ingests the API JSON report into the quality dashboard.
+The black-box API contract runner is based on the API Sentinel approach in the supplied quality-engineering suite. It uses isolated test credentials and performs registration, login, persisted-cart, checkout, idempotency, and order-history checks against a real running API. Use a disposable test database because the suite writes a customer, basket, and order:
+
+```powershell
+$env:BASE_URL = 'http://127.0.0.1:4000/api/'
+$env:SENTINEL_EMAIL = "contract-$([guid]::NewGuid().ToString('N'))@example.test"
+$env:SENTINEL_PASSWORD = "Contract-$([guid]::NewGuid().ToString('N'))"
+$env:SENTINEL_IDEMPOTENCY_KEY = "contract-$([guid]::NewGuid().ToString('N'))"
+npm run test:api-contract
+```
+
+It writes JSON, JUnit XML, and HTML reports under `artifacts/api-contract/`. Playwright starts the API and web server automatically, but requires a running database. Its browser tests use a page-object fixture adapted from the AutoTest Pro pattern and unique synthetic accounts. CI migrates PostgreSQL, runs unit and concurrent integration tests, lint/type checks, browser tests, API contract checks, coverage reporting, and uploads the reports as GitHub Actions artifacts. CI ingests both Vitest and API contract results into the quality dashboard. The supplied CodeVerity runner was not copied because its lint, type-check, dependency-tree, and audit checks overlap the existing project gates; the existing CI keeps those checks attached directly to RetailQ's own configs and lockfile. Generated portfolio/report bundles from the archive were also excluded.
 
 Coverage output is written to `artifacts/coverage/`. API test JSON is written to `artifacts/api-results.json`. To ingest a report manually, set `RETAILQ_ADMIN_TOKEN` to a valid admin bearer token and run:
 

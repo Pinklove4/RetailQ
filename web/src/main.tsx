@@ -28,7 +28,17 @@ type ApiError = { error?: string };
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(API + path, init);
-  const body = await response.json() as T & ApiError;
+  const text = await response.text();
+  let body: T & ApiError;
+  try {
+    body = JSON.parse(text) as T & ApiError;
+  } catch {
+    throw new Error(
+      text
+        ? `API returned an invalid response (${response.status})`
+        : `API returned no response (${response.status})`,
+    );
+  }
   if (!response.ok) throw new Error(body.error || `Request failed (${response.status})`);
   return body;
 }
@@ -303,7 +313,7 @@ function App() {
                         <div className="buy">
                           <strong>{money(product.price_cents)}</strong>
                           <button
-                            disabled={!product.inventory || (cart[product.id] || 0) >= product.inventory}
+                            disabled={!cartLoaded || !product.inventory || (cart[product.id] || 0) >= product.inventory}
                             aria-label={`Add ${product.name}`}
                             onClick={() => setCart({ ...cart, [product.id]: (cart[product.id] || 0) + 1 })}
                           >+ Add</button>
@@ -334,7 +344,7 @@ function App() {
                     <p>Estimated tax ({(taxBps / 100).toFixed(2)}%) <b>{money(tax)}</b></p>
                     <p className="grand">Total <b>{money(subtotal - discount + tax)}</b></p>
                   </div>
-                  <button className="checkout" onClick={() => void checkout()} disabled={!subtotal || checkoutPending}>
+                  <button className="checkout" onClick={() => void checkout()} disabled={!cartLoaded || !subtotal || checkoutPending}>
                     {checkoutPending ? 'Placing order…' : 'Place test order →'}
                   </button>
                   <small className="safe">Simulated payment · No charges</small>

@@ -4,14 +4,16 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently \"npm run dev -w api\" \"npm run dev -w web\"",
-    "test": "npm run test -w api",
+    "test": "npm run test -w api && node --test tests/api-sentinel/runner.test.mjs",
     "test:e2e": "playwright test",
+    "test:api-contract": "node tests/api-sentinel/run.mjs",
     "lint": "eslint api/src api/tests web/src tests scripts playwright.config.ts",
     "typecheck": "npm run typecheck -w api && npm run typecheck -w web",
     "build": "npm run build -w web",
     "test:api": "npm run test -w api",
+    "test:e2e:chromium": "playwright test --project=chromium",
     "test:perf": "k6 run tests/performance/load.js",
-    "test:coverage": "npm run test:coverage -w api",
+    "test:coverage": "npm run test:coverage -w api && node --test tests/api-sentinel/runner.test.mjs",
     "quality:ingest": "node scripts/ingest-test-results.mjs"
   },
   "workspaces": [
@@ -20,6 +22,7 @@
   ],
   "devDependencies": {
     "@playwright/test": "^1.56.0",
+    "ajv": "^8.20.0",
     "concurrently": "^9.2.0",
     "typescript": "^5.9.3"
   }
