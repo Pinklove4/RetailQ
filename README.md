@@ -76,7 +76,7 @@ $env:DATABASE_URL = 'postgres://retailq:retailq@localhost:5432/retailq'
 node scripts/promote-admin.mjs admin@example.com
 ```
 
-The user must sign in again after promotion to receive an admin token. Admins can create and update defect records and ingest test runs. Production mode rejects missing or short `JWT_SECRET` values. Configure browser origins with comma-separated `ALLOWED_ORIGINS`; the default allows local Vite development origins. Authentication routes are rate limited, payloads are validated, and API responses include baseline security headers.
+The user must sign in again after promotion to receive an admin token. Admins can create and update defect records and ingest test runs. Production mode rejects missing or short `JWT_SECRET` values. Configure browser origins with comma-separated `ALLOWED_ORIGINS`; the default allows local Vite development origins. Authentication routes are rate limited to 20 requests per 15 minutes by default; `AUTH_RATE_LIMIT_MAX` can override that positive-integer limit. The Playwright-managed API server uses a higher limit so the parallel browser matrix does not throttle its own synthetic accounts. Payloads are validated, and API responses include baseline security headers.
 
 ## Architecture
 

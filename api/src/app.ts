@@ -41,9 +41,13 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '32kb' }));
 
+const authRateLimitMax = Number(process.env.AUTH_RATE_LIMIT_MAX ?? 20);
+if (!Number.isSafeInteger(authRateLimitMax) || authRateLimitMax < 1) {
+  throw new Error('AUTH_RATE_LIMIT_MAX must be a positive integer');
+}
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 20,
+  limit: authRateLimitMax,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   message: { error: 'Too many authentication attempts. Try again later.' },

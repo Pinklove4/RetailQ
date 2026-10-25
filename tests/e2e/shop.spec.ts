@@ -90,12 +90,12 @@ test('invalid promotion is rejected and preserves the basket', async ({ page, sh
   await expect(page.getByRole('heading', { name: 'Your basket 1' })).toBeVisible();
 });
 
-test('storefront fits a narrow mobile viewport without horizontal overflow', async ({ page }) => {
-  await expect(page.getByRole('heading', { name: 'Explore the market' })).toBeVisible();
-  const dimensions = await page.evaluate(() => ({
+test('storefront fits a narrow mobile viewport without horizontal overflow', async ({ shop }) => {
+  await expect(shop.page.getByRole('heading', { name: 'Explore the market' })).toBeVisible();
+  const dimensions = await shop.page.evaluate(() => ({
     viewport: document.documentElement.clientWidth,
     content: document.documentElement.scrollWidth,
   }));
   expect(dimensions.content).toBeLessThanOrEqual(dimensions.viewport);
-  await expect(page.getByRole('button', { name: 'Place test order' })).toBeVisible();
+  await expect(shop.page.getByRole('button', { name: 'Place test order' })).toBeVisible();
 });

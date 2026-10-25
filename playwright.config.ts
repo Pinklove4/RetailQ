@@ -30,6 +30,7 @@ export default defineConfig({
     {
       command: 'npm run dev -w api',
       url: 'http://127.0.0.1:4000/api/health',
+      env: { AUTH_RATE_LIMIT_MAX: '100' },
       reuseExistingServer: !process.env.CI,
     },
     {
