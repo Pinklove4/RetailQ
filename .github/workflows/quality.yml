@@ -41,7 +41,7 @@ jobs:
           if [ -f artifacts/coverage/coverage-summary.json ]; then
             node --input-type=module -e 'import fs from "node:fs"; const t=JSON.parse(fs.readFileSync("artifacts/coverage/coverage-summary.json","utf8")).total; console.log(`## API coverage\n\n| Lines | Statements | Functions | Branches |\n|---:|---:|---:|---:|\n| ${t.lines.pct}% | ${t.statements.pct}% | ${t.functions.pct}% | ${t.branches.pct}% |`)' >> "$GITHUB_STEP_SUMMARY"
           fi
-      - run: npx playwright install --with-deps chromium firefox
+      - run: npx playwright install --with-deps chromium firefox webkit
       - run: npm run test:e2e
       - name: Ingest API test results into quality dashboard
         run: |

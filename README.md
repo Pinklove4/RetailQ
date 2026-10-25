@@ -58,6 +58,8 @@ npm run test:api-contract
 
 It writes JSON, JUnit XML, and HTML reports under `artifacts/api-contract/`. Playwright starts the API and web server automatically, but requires a running database. Its browser tests use a page-object fixture adapted from the AutoTest Pro pattern and unique synthetic accounts. CI migrates PostgreSQL, runs unit and concurrent integration tests, lint/type checks, browser tests, API contract checks, coverage reporting, and uploads the reports as GitHub Actions artifacts. CI ingests both Vitest and API contract results into the quality dashboard. The supplied CodeVerity runner was not copied because its lint, type-check, dependency-tree, and audit checks overlap the existing project gates; the existing CI keeps those checks attached directly to RetailQ's own configs and lockfile. Generated portfolio/report bundles from the archive were also excluded.
 
+The Playwright matrix covers desktop Chromium, Firefox, WebKit, and Pixel 7 mobile emulation. Failure traces, screenshots, and videos are retained under `artifacts/test-results/`; HTML, JSON, and JUnit reports are written under `artifacts/`. In CI, focused tests are rejected and failed tests are retried once for diagnostics; local runs do not retry.
+
 Coverage output is written to `artifacts/coverage/`. API test JSON is written to `artifacts/api-results.json`. To ingest a report manually, set `RETAILQ_ADMIN_TOKEN` to a valid admin bearer token and run:
 
 ```powershell
